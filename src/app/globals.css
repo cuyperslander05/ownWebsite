@@ -7,8 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -127,4 +126,109 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ---- awrs-me-f38a6f68 / en-7a4ba3ba: site-scoped design tokens ----
+   Prefixed --awrs- to avoid colliding with the shadcn semantic --color-*
+   tokens above (which mean something different: neutral UI chrome, not
+   this site's brand palette). */
+:root {
+  --awrs-bg: #fff;
+  --awrs-bg-secondary: #f5f5f7;
+  --awrs-bg-tertiary: #eeeef2;
+  --awrs-text: #1a1a2e;
+  --awrs-text-secondary: #4b5563;
+  --awrs-text-tertiary: #6b7280;
+  --awrs-border: #e5e7eb;
+  --awrs-card: #fff;
+  --awrs-card-hover: #f9f9fb;
+  --awrs-navbar: #ffffffd9;
+  --awrs-primary: #d4547e;
+  --awrs-primary-light: #e07a9c;
+  --awrs-primary-dark: #a83d62;
+  --awrs-primary-glow: #d4547e40;
+  --awrs-beams-line: #888;
+}
+
+@keyframes awrs-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.awrs-spotlight-card {
+  --spotlight-x: -100px;
+  --spotlight-y: -100px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.3s;
+}
+.awrs-spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  background: radial-gradient(
+    600px circle at var(--spotlight-x) var(--spotlight-y),
+    rgba(212, 84, 126, 0.12),
+    transparent 40%
+  );
+}
+.awrs-spotlight-card:hover::before {
+  opacity: 1;
+}
+.awrs-spotlight-card:hover {
+  border-color: var(--awrs-primary);
+}
+
+.awrs-nav-glow-beam {
+  background: radial-gradient(
+    50% 100% at 50% 0%,
+    var(--awrs-primary) 0%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px 4px var(--awrs-primary-glow),
+    0 0 28px 8px var(--awrs-primary-glow);
+  filter: blur(3px);
+}
+.awrs-nav-glow-core {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--awrs-primary-light) 20%,
+    var(--awrs-primary) 50%,
+    var(--awrs-primary-light) 80%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 6px 1px var(--awrs-primary),
+    0 0 16px 2px var(--awrs-primary-glow);
+}
+
+.awrs-hero-char {
+  display: inline-block;
+  background-image: linear-gradient(
+    to right,
+    var(--awrs-primary-dark),
+    var(--awrs-primary),
+    var(--awrs-primary-light),
+    #f5b8cc
+  );
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.awrs-dot-grid {
+  background-image: radial-gradient(circle, #ccc 1px, transparent 1px);
+  background-size: 24px 24px;
 }
