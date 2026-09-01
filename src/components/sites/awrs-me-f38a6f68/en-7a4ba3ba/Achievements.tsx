@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  Award,
-  Lightbulb,
-  Medal,
-  Rocket,
-  Trophy,
-  type LucideIcon,
-} from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { type LucideIcon } from "lucide-react";
+
+import { Reveal } from "./Reveal";
+import { SectionEmpty } from "./SectionEmpty";
 
 interface Achievement {
   title: string;
@@ -19,53 +15,21 @@ interface Achievement {
   color: string;
 }
 
-const achievements: Achievement[] = [
-  {
-    title: "1st Place — Intelligent Planet Hackathon",
-    org: "KFUPM & Google Cloud",
-    date: "Feb 2026",
-    description:
-      "Achieved 1st place among 500+ teams from 60+ countries. Built Manara — a personal guardian app with AR navigation and real-time risk alerts.",
-    icon: Trophy,
-    color: "#f59e0b",
-  },
-  {
-    title: "Best AI Solution — Innovation Hackathon",
-    org: "Middle East College & KEF",
-    date: "Apr 2026",
-    description:
-      "Awarded for developing an outstanding AI-driven innovation at the KEF Innovation Hackathon 2026.",
-    icon: Lightbulb,
-    color: "#3b82f6",
-  },
-  {
-    title: "Best Team — NASA Space Apps Hackathon",
-    org: "NASA · Art & Technology",
-    date: "Oct 2025",
-    description:
-      "Awarded Best Team in the Art & Technology category. Recognized by Sohar University, NASA, and UTAS.",
-    icon: Rocket,
-    color: "#10b981",
-  },
-  {
-    title: "2nd Place — ICPC Oman (OCPC)",
-    org: "ICPC",
-    date: "Apr 2026",
-    description:
-      "Secured second place in the Oman Collegiate Programming Contest 2025.",
-    icon: Medal,
-    color: "#8b5cf6",
-  },
-  {
-    title: "Vice Chancellor's Award for Outstanding Achievement",
-    org: "Sohar University",
-    date: "2025/2026",
-    description:
-      "Recognized by Sohar University for international achievements and outstanding contributions to student activities.",
-    icon: Award,
-    color: "#d4547e",
-  },
-];
+/**
+ * Empty until real achievements are added. Shape of an entry:
+ *
+ * ```ts
+ * {
+ *   title: "What you won or earned",
+ *   org: "Who awarded it",
+ *   date: "2026",
+ *   description: "One sentence of context.",
+ *   icon: Trophy,
+ *   color: "#d4547e",
+ * }
+ * ```
+ */
+const achievements: Achievement[] = [];
 
 interface AchievementCardProps {
   achievement: Achievement;
@@ -73,50 +37,56 @@ interface AchievementCardProps {
   isLast: boolean;
 }
 
+const PARTICLES = [
+  { size: 4, top: "12%", inset: "15%", duration: "6s", delay: "0s" },
+  { size: 3, top: "25%", inset: "8%", duration: "7s", delay: "1.5s" },
+  { size: 5, top: "60%", inset: "12%", duration: "5.5s", delay: "3s" },
+  { size: 3, top: "75%", inset: "22%", duration: "6.5s", delay: "2s" },
+];
+
 function AchievementCard({ achievement, index, isLast }: AchievementCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const { ref: cardRef, visible } = useScrollReveal<HTMLDivElement>();
   const Icon = achievement.icon;
-
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setVisible(true);
-            observer.disconnect();
-          }
-        }
-      },
-      { threshold: 0.15 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <div
       ref={cardRef}
-      className={`awrs-spotlight-card relative rounded-2xl border border-[var(--awrs-border)] bg-[var(--awrs-card)] p-6${
+      data-reveal="up"
+      data-visible={visible ? "true" : undefined}
+      className={`awrs-spotlight-card relative overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-[var(--awrs-card)] p-6${
         isLast ? " md:col-span-2 md:max-w-md md:mx-auto" : ""
       }`}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(20px)",
-        transition: "opacity .5s ease-out, transform .5s ease-out",
-        transitionDelay: `${index * 100}ms`,
-      }}
+      style={{ transitionDelay: `${index * 100}ms` }}
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
         e.currentTarget.style.setProperty("--spotlight-x", `${e.clientX - r.left}px`);
         e.currentTarget.style.setProperty("--spotlight-y", `${e.clientY - r.top}px`);
       }}
     >
-      <div className="flex items-start gap-4">
+      <div
+        className="awrs-achievement-border-sweep pointer-events-none absolute inset-0 rounded-2xl p-px [mask:linear-gradient(#000,#000)_content-box_exclude,_linear-gradient(#000,#000)]"
+        style={{
+          background: `conic-gradient(from var(--awrs-border-angle), transparent 60%, ${achievement.color} 78%, transparent 100%)`,
+        }}
+        aria-hidden="true"
+      />
+      {PARTICLES.map((particle, i) => (
+        <div
+          key={i}
+          className="awrs-achievement-particle pointer-events-none absolute rounded-full"
+          style={{
+            width: particle.size,
+            height: particle.size,
+            top: particle.top,
+            insetInlineEnd: particle.inset,
+            backgroundColor: achievement.color,
+            animationDuration: particle.duration,
+            animationDelay: particle.delay,
+          }}
+          aria-hidden="true"
+        />
+      ))}
+      <div className="relative z-10 flex items-start gap-4">
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: `${achievement.color}1a` }}
@@ -124,7 +94,7 @@ function AchievementCard({ achievement, index, isLast }: AchievementCardProps) {
           <Icon style={{ color: achievement.color }} size={22} />
         </div>
         <div>
-          <h3 className="font-bold leading-snug">{achievement.title}</h3>
+          <h3 className="awrs-shimmer-title font-bold leading-snug">{achievement.title}</h3>
           <p
             className="text-sm font-medium mt-0.5"
             style={{ color: achievement.color }}
@@ -144,18 +114,24 @@ export function Achievements() {
   return (
     <section id="achievements" className="py-20 md:py-28">
       <div className="max-w-5xl mx-auto px-6">
-        <h2 className="text-4xl md:text-5xl font-black">Achievements</h2>
-        <div className="w-10 h-1 bg-[var(--awrs-primary)] rounded-full mt-4 mb-10" />
-        <div className="grid md:grid-cols-2 gap-5">
-          {achievements.map((achievement, index) => (
-            <AchievementCard
-              key={achievement.title}
-              achievement={achievement}
-              index={index}
-              isLast={index === achievements.length - 1}
-            />
-          ))}
-        </div>
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-black">Achievements</h2>
+          <div className="w-10 h-1 bg-[var(--awrs-primary)] rounded-full mt-4 mb-10" />
+        </Reveal>
+        {achievements.length === 0 ? (
+          <SectionEmpty>No achievements listed yet.</SectionEmpty>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-5">
+            {achievements.map((achievement, index) => (
+              <AchievementCard
+                key={achievement.title}
+                achievement={achievement}
+                index={index}
+                isLast={index === achievements.length - 1}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

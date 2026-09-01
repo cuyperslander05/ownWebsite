@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { SITE } from "@/lib/site";
+
 const LOGO_SRC = "/sites/awrs-me-f38a6f68/en-7a4ba3ba/images/logo.svg";
 
 export function LogoMark({
@@ -12,7 +14,7 @@ export function LogoMark({
   return (
     <Image
       src={LOGO_SRC}
-      alt="Abdulwahed Aldaghir"
+      alt={SITE.name}
       width={size}
       height={size}
       className={className}

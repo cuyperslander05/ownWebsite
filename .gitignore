@@ -47,3 +47,6 @@ next-env.d.ts
 
 # Local temp files
 temp/
+
+# Local session archive (large, not part of the site)
+.claude.zip

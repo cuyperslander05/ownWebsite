@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 
+import { SITE } from "@/lib/site";
+import { Reveal } from "./Reveal";
+
 const IMPACT_CHARS = "IMPACT".split("");
 
 export function ContactCTA() {
@@ -47,13 +50,23 @@ export function ContactCTA() {
   }, []);
 
   return (
-    <section className="relative py-20 md:py-28">
-      <div className="max-w-4xl mx-auto px-6">
-        <h2 className="text-4xl md:text-5xl font-black">Ready to Connect?</h2>
-        <p className="mt-2 text-lg text-[var(--awrs-text-secondary)]">
-          {"Let's turn your next idea into something real"}
-        </p>
-        <div className="w-10 h-1 bg-[var(--awrs-primary)] rounded-full mt-4" />
+    <section id="contact" className="relative overflow-hidden py-20 md:py-28">
+      <div
+        className="awrs-cta-aurora pointer-events-none absolute -top-1/3 -left-1/4 h-2/3 w-3/4 rounded-full bg-[var(--awrs-primary)] opacity-[0.06] blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="awrs-cta-aurora-alt pointer-events-none absolute -bottom-1/4 -right-1/4 h-1/2 w-2/3 rounded-full bg-[var(--awrs-primary)] opacity-[0.04] blur-3xl"
+        aria-hidden="true"
+      />
+      <div className="relative max-w-4xl mx-auto px-6">
+        <Reveal>
+          <h2 className="text-4xl md:text-5xl font-black">Ready to Connect?</h2>
+          <p className="mt-2 text-lg text-[var(--awrs-text-secondary)]">
+            {"Let's turn your next idea into something real"}
+          </p>
+          <div className="w-10 h-1 bg-[var(--awrs-primary)] rounded-full mt-4" />
+        </Reveal>
 
         <div className="mt-10 rounded-2xl border border-[var(--awrs-border)] bg-gradient-to-b from-[var(--awrs-primary)]/5 to-transparent p-8 md:p-16 text-center">
           <h3 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight">
@@ -84,18 +97,31 @@ export function ContactCTA() {
           <p className="mt-2 text-lg md:text-xl font-bold tracking-wide text-[var(--awrs-text-secondary)]">
             {"LET'S BUILD SOMETHING REAL."}
           </p>
-          <a
-            href="mailto:abdulwahedaldaghir0@gmail.com"
-            className="mt-8 inline-flex items-center gap-2 rounded-full border border-[var(--awrs-text)] px-6 py-3 font-semibold hover:bg-[var(--awrs-text)] hover:text-white transition-colors"
-          >
-            Get in Touch <ArrowRight size={18} />
-          </a>
+          <span className="group/btn relative mt-8 inline-block">
+            <span
+              className="awrs-rotate-border-ring pointer-events-none absolute inset-0 rounded-full p-px opacity-0 transition-opacity duration-700 [mask:linear-gradient(#000,#000)_content-box_exclude,_linear-gradient(#000,#000)] group-hover/btn:opacity-100"
+              style={{ animationDuration: "4s" }}
+              aria-hidden="true"
+            />
+            <a
+              href={`mailto:${SITE.email}`}
+              className="relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-[var(--awrs-text)] px-6 py-3 font-semibold transition-colors hover:bg-[var(--awrs-text)] hover:text-white"
+            >
+              <span
+                className="awrs-cta-shimmer-layer pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover/btn:opacity-100"
+                aria-hidden="true"
+              />
+              <span className="relative z-10 inline-flex items-center gap-2">
+                Get in Touch <ArrowRight size={18} />
+              </span>
+            </a>
+          </span>
           <p className="mt-6 text-sm text-[var(--awrs-text-tertiary)]">
             Open to full-time roles & freelance projects
           </p>
           <p className="mt-2 text-sm text-[var(--awrs-text-secondary)] max-w-md mx-auto">
-            I build high-performance applications that turn complex ideas into
-            seamless user experiences.
+            Full-stack web work — front end, back end, and the bits in between.
+            Say hello and tell me what you are building.
           </p>
         </div>
       </div>

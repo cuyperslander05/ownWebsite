@@ -2,21 +2,21 @@
 
 import { useEffect, type ComponentType, type SVGProps } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Search,
   Home,
   Folder,
-  Book,
   PenLine,
   MessageCircle,
   ArrowUpRight,
   Shield,
   FileText,
-  Globe,
   Moon,
   type LucideIcon,
 } from "lucide-react";
-import { GithubIcon, LinkedinIcon, XIcon, RedditIcon } from "../shared/brand-icons";
+import { GithubIcon, LinkedinIcon } from "../shared/brand-icons";
+import { SITE } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 interface CommandPaletteProps {
@@ -28,15 +28,13 @@ interface PageEntry {
   label: string;
   href: string;
   icon: LucideIcon;
-  active?: boolean;
 }
 
 const PAGES: PageEntry[] = [
-  { label: "Home", href: "/", icon: Home, active: true },
-  { label: "Projects", href: "#", icon: Folder },
-  { label: "Blog", href: "#", icon: Book },
-  { label: "The Wall", href: "#", icon: PenLine },
-  { label: "Contact", href: "#contact", icon: MessageCircle },
+  { label: "Home", href: "/", icon: Home },
+  { label: "Projects", href: "/#projects", icon: Folder },
+  { label: "The Wall", href: "/#misc", icon: PenLine },
+  { label: "Contact", href: "/#contact", icon: MessageCircle },
 ];
 
 interface ConnectEntry {
@@ -45,22 +43,24 @@ interface ConnectEntry {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
+// Only profiles that actually exist — the cloned design also listed X and
+// Reddit, but there are no accounts to point them at.
 const CONNECT: ConnectEntry[] = [
-  { label: "GitHub", href: "https://github.com/abdulwahed-s", icon: GithubIcon },
-  { label: "LinkedIn", href: "https://linkedin.com/in/abdulwahed-s", icon: LinkedinIcon },
-  { label: "X (Twitter)", href: "#", icon: XIcon },
-  { label: "Reddit", href: "#", icon: RedditIcon },
+  { label: "GitHub", href: SITE.github, icon: GithubIcon },
+  { label: "LinkedIn", href: SITE.linkedin, icon: LinkedinIcon },
 ];
 
 const LEGAL: PageEntry[] = [
-  { label: "Privacy Policy", href: "#", icon: Shield },
-  { label: "Terms of Use", href: "#", icon: FileText },
+  { label: "Privacy Policy", href: "/privacy", icon: Shield },
+  { label: "Terms of Use", href: "/terms", icon: FileText },
 ];
 
 const pillClasses =
   "flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--awrs-border)] text-sm font-medium text-[var(--awrs-text)] hover:bg-[var(--awrs-card-hover)] transition-colors";
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
@@ -121,19 +121,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             />
           </div>
           <a
-            href="mailto:abdulwahedaldaghir0@gmail.com"
+            href={`mailto:${SITE.email}`}
             className="flex h-11 items-center whitespace-nowrap rounded-xl bg-[var(--awrs-bg-secondary)] px-5 text-sm font-medium text-[var(--awrs-text)] transition-colors hover:bg-[var(--awrs-card-hover)]"
           >
             Reach out
           </a>
-          <button
-            type="button"
-            aria-label="Switch language"
-            onClick={() => {}}
-            className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--awrs-bg-secondary)] transition-colors hover:bg-[var(--awrs-card-hover)]"
-          >
-            <Globe className="h-4 w-4 text-[var(--awrs-text)]" />
-          </button>
           <button
             type="button"
             aria-label="Toggle theme"
@@ -153,14 +145,16 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <div className="grid grid-cols-2 gap-2 px-6">
           {PAGES.map((page) => {
             const Icon = page.icon;
+            const isCurrent = page.href === pathname;
             return (
               <Link
                 key={page.label}
                 href={page.href}
                 onClick={() => onOpenChange(false)}
+                aria-current={isCurrent ? "page" : undefined}
                 className={cn(
                   pillClasses,
-                  page.active &&
+                  isCurrent &&
                     "border-[var(--awrs-primary)] text-[var(--awrs-primary)] bg-[var(--awrs-primary)]/5"
                 )}
               >
@@ -201,11 +195,22 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         <div className="flex flex-wrap gap-2 px-6 pb-6">
           {LEGAL.map((item) => {
             const Icon = item.icon;
+            const isCurrent = item.href === pathname;
             return (
-              <a key={item.label} href={item.href} className={pillClasses}>
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => onOpenChange(false)}
+                aria-current={isCurrent ? "page" : undefined}
+                className={cn(
+                  pillClasses,
+                  isCurrent &&
+                    "border-[var(--awrs-primary)] text-[var(--awrs-primary)] bg-[var(--awrs-primary)]/5"
+                )}
+              >
                 <Icon className="h-4 w-4" />
                 {item.label}
-              </a>
+              </Link>
             );
           })}
         </div>

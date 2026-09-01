@@ -2,24 +2,39 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const NAME = "Abdulwahed";
+import { SITE } from "@/lib/site";
 
+const NAME = SITE.firstName;
+
+// Neutral role words: they follow from the job title rather than claiming a
+// particular stack. Swap them for your own once the skills list is filled in.
 const MARQUEE_ITEMS_PRIMARY = [
-  "Flutter Specialist",
-  "Mobile App Architect",
-  "AI & ML Integration",
-  "Cross-Platform Builder",
-  "Performance Optimizer",
-  "Full-Stack Developer",
+  SITE.jobTitle,
+  "Frontend & Backend",
+  "Web Applications",
+  "APIs & Databases",
+  "Clean Interfaces",
+  `Based in ${SITE.countryName}`,
 ];
 
 const MARQUEE_ITEMS_SECONDARY = [
   "Problem Solver",
-  "More Than an Engineer",
-  "UI/UX Enthusiast",
-  "Product Builder",
-  "SaaS Architect",
-  "Creative Developer",
+  "Curious by Default",
+  "Detail Obsessed",
+  "Always Learning",
+  "Ships and Iterates",
+  "Open to Work",
+];
+
+const PARTICLES = [
+  { top: "18%", left: "12%", delay: "0s" },
+  { top: "28%", left: "82%", delay: "0.9s" },
+  { top: "40%", left: "22%", delay: "1.8s" },
+  { top: "35%", left: "70%", delay: "2.7s" },
+  { top: "55%", left: "8%", delay: "3.6s" },
+  { top: "50%", left: "90%", delay: "4.5s" },
+  { top: "62%", left: "45%", delay: "5.4s" },
+  { top: "22%", left: "55%", delay: "6.3s" },
 ];
 
 function MarqueeCopy({ items }: { items: string[] }) {
@@ -73,6 +88,16 @@ export function Hero() {
         <line x1="90%" y1="10%" x2="60%" y2="95%" stroke="var(--awrs-beams-line)" strokeWidth="1" />
       </svg>
 
+      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        {PARTICLES.map((particle, index) => (
+          <div
+            key={index}
+            className="awrs-particle absolute h-1 w-1 rounded-full bg-[var(--awrs-primary)]/20"
+            style={{ top: particle.top, left: particle.left, animationDelay: particle.delay }}
+          />
+        ))}
+      </div>
+
       <div className="relative z-10 max-w-4xl -translate-y-16 px-6 text-center">
         <span className="text-sm uppercase tracking-[0.25em] text-[var(--awrs-text-tertiary)]">
           {"Hi, I'm"}
@@ -105,21 +130,28 @@ export function Hero() {
               </span>
             );
           })}
+          {/* The design shows the first name only, but the page's one heading
+              still has to name the person and the role for screen readers and
+              search engines. sr-only is absolutely positioned, so it does not
+              disturb the width measurements above. */}
+          <span className="sr-only">
+            {` ${SITE.name.split(" ").slice(1).join(" ")} — ${SITE.jobTitle}`}
+          </span>
         </h1>
         <p className="mx-auto max-w-xl text-lg font-medium leading-relaxed text-[var(--awrs-text-secondary)] md:text-xl">
-          Software Engineer &amp; Full-Stack Mobile Developer
+          {SITE.jobTitle}
         </p>
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
         <div className="absolute left-[-20%] top-[75%] w-[140%] overflow-hidden rotate-[4deg] bg-gradient-to-r from-pink-800 via-rose-700 to-pink-800 py-3.5 text-white/80 md:top-[85%] md:py-5">
-          <div className="flex w-max" style={{ animation: "awrs-marquee 30s linear infinite reverse" }}>
+          <div className="flex w-max" style={{ animation: "awrs-marquee 35s linear infinite reverse" }}>
             <MarqueeCopy items={MARQUEE_ITEMS_PRIMARY} />
             <MarqueeCopy items={MARQUEE_ITEMS_PRIMARY} />
           </div>
         </div>
         <div className="absolute left-[-20%] top-[78%] w-[140%] overflow-hidden -rotate-[4deg] border-y border-[var(--awrs-border)] bg-[var(--awrs-card)] py-3.5 text-[var(--awrs-text-secondary)] md:top-[88%] md:py-5">
-          <div className="flex w-max" style={{ animation: "awrs-marquee 30s linear infinite" }}>
+          <div className="flex w-max" style={{ animation: "awrs-marquee 40s linear infinite" }}>
             <MarqueeCopy items={MARQUEE_ITEMS_SECONDARY} />
             <MarqueeCopy items={MARQUEE_ITEMS_SECONDARY} />
           </div>

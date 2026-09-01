@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Command, Menu } from "lucide-react";
 import { LogoMark } from "../shared/icons";
 import { CommandPalette } from "./CommandPalette";
@@ -10,15 +11,18 @@ import { cn } from "@/lib/utils";
 interface NavLinkItem {
   label: string;
   href: string;
-  active?: boolean;
 }
 
+/**
+ * Section links are absolute ("/#projects" rather than "#projects") so the nav
+ * also works from the legal pages and the 404, where there is no such section
+ * on the current document.
+ */
 const NAV_LINKS: NavLinkItem[] = [
-  { label: "Home", href: "/", active: true },
-  { label: "Projects", href: "#" },
-  { label: "Blog", href: "#" },
-  { label: "The Wall", href: "#" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/" },
+  { label: "Projects", href: "/#projects" },
+  { label: "The Wall", href: "/#misc" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 interface Greeting {
@@ -40,6 +44,7 @@ const floatingPillClasses =
   "rounded-full border border-[var(--awrs-border)] bg-[var(--awrs-navbar)] shadow-sm backdrop-blur-md";
 
 export function Nav() {
+  const pathname = usePathname();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [greeting, setGreeting] = useState<Greeting>(DEFAULT_GREETING);
@@ -107,20 +112,24 @@ export function Nav() {
             )}
           >
             <div className="flex items-center gap-1 px-1">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className={cn(
-                    "rounded-full px-5 py-1.5 text-sm font-medium transition-colors",
-                    link.active
-                      ? "bg-[var(--awrs-text)]/[0.08] text-[var(--awrs-primary)]"
-                      : "text-[var(--awrs-text-secondary)] hover:text-[var(--awrs-text)]"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {NAV_LINKS.map((link) => {
+                const isCurrent = link.href === "/" && pathname === "/";
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    aria-current={isCurrent ? "page" : undefined}
+                    className={cn(
+                      "rounded-full px-5 py-1.5 text-sm font-medium transition-colors",
+                      isCurrent
+                        ? "bg-[var(--awrs-text)]/[0.08] text-[var(--awrs-primary)]"
+                        : "text-[var(--awrs-text-secondary)] hover:text-[var(--awrs-text)]"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

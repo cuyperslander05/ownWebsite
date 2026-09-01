@@ -1,38 +1,55 @@
+import { SITE } from "@/lib/site";
+import { Reveal } from "./Reveal";
+import { SectionEmpty } from "./SectionEmpty";
+
 const BASE = "/sites/awrs-me-f38a6f68/en-7a4ba3ba/images/misc/";
 
 interface Sticker {
-  src: string;
+  file: string;
+  /** Alt text: what the sticker actually shows. */
+  alt: string;
   top: string;
   left: string;
   rotate: number;
   width: number;
 }
 
-const stickers: Sticker[] = [
-  { src: BASE + "maki.png", top: "2%", left: "8%", rotate: -8, width: 70 },
-  { src: BASE + "aizen.png", top: "5%", left: "22%", rotate: -4, width: 130 },
-  { src: BASE + "flutter.png", top: "8%", left: "46%", rotate: 3, width: 90 },
-  { src: BASE + "gwen.png", top: "8%", left: "60%", rotate: -6, width: 150 },
-  { src: BASE + "tung.png", top: "5%", left: "82%", rotate: 5, width: 90 },
-  { src: BASE + "itachi.png", top: "38%", left: "6%", rotate: -3, width: 150 },
-  { src: BASE + "mikasa.png", top: "42%", left: "44%", rotate: 4, width: 100 },
-  { src: BASE + "sawako.png", top: "58%", left: "62%", rotate: -5, width: 130 },
-  { src: BASE + "mikey.png", top: "36%", left: "77%", rotate: 2, width: 80 },
-  { src: BASE + "yuta.png", top: "78%", left: "20%", rotate: -6, width: 110 },
-  { src: BASE + "android.png", top: "76%", left: "45%", rotate: 4, width: 90 },
-  { src: BASE + "kora.png", top: "80%", left: "65%", rotate: -3, width: 100 },
-  { src: BASE + "hutao.png", top: "80%", left: "85%", rotate: 6, width: 90 },
-];
+/**
+ * Empty until there are images to pin. Drop files into
+ * `public/sites/awrs-me-f38a6f68/en-7a4ba3ba/images/misc/` and add:
+ *
+ * ```ts
+ * { file: "photo.png", alt: "What it shows", top: "8%", left: "22%", rotate: -4, width: 130 }
+ * ```
+ *
+ * `top`/`left`/`rotate` only affect the desktop collage; mobile lays them out
+ * in a simple wrap.
+ */
+const stickers: Sticker[] = [];
 
 export function MiscWall() {
   return (
     <section id="misc" className="py-20 md:py-28 awrs-dot-grid">
+      {/* The collage is the design; the heading is for structure and is only
+          exposed to screen readers and search engines. */}
+      <h2 className="sr-only">The Wall</h2>
+
+      {stickers.length === 0 && (
+        <Reveal className="max-w-3xl mx-auto px-6">
+          <SectionEmpty>Nothing pinned to the wall yet.</SectionEmpty>
+        </Reveal>
+      )}
+
       {/* Desktop: absolutely-positioned scattered collage */}
-      <div className="max-w-6xl mx-auto px-6 relative h-[420px] md:h-[520px] hidden md:block">
+      <div
+        className="max-w-6xl mx-auto px-6 relative h-[420px] md:h-[520px] hidden md:block"
+        hidden={stickers.length === 0}
+      >
         {stickers.map((sticker) => (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
-            key={sticker.src}
-            src={sticker.src}
+            key={sticker.file}
+            src={BASE + sticker.file}
             style={{
               position: "absolute",
               top: sticker.top,
@@ -41,36 +58,43 @@ export function MiscWall() {
               transform: `rotate(${sticker.rotate}deg)`,
             }}
             className="drop-shadow-lg select-none pointer-events-none"
-            alt=""
+            alt={sticker.alt}
+            loading="lazy"
+            decoding="async"
           />
         ))}
-        <div
-          className="absolute rounded-xl bg-white shadow-lg px-4 py-3 text-sm"
-          style={{ top: "40%", left: "24%", maxWidth: 220 }}
-        >
-          痛みを知らぬ者に、本当の平和は分からん
-        </div>
       </div>
 
       {/* Mobile: simple flex-wrap layout, no absolute positioning/rotation */}
-      <div className="max-w-6xl mx-auto px-6 md:hidden flex flex-wrap justify-center gap-4">
+      <div
+        className="max-w-6xl mx-auto px-6 md:hidden flex flex-wrap justify-center gap-4"
+        hidden={stickers.length === 0}
+      >
         {stickers.map((sticker) => (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
-            key={sticker.src}
-            src={sticker.src}
+            key={sticker.file}
+            src={BASE + sticker.file}
             style={{ width: sticker.width }}
             className="drop-shadow-lg select-none"
-            alt=""
+            alt={sticker.alt}
+            loading="lazy"
+            decoding="async"
           />
         ))}
       </div>
 
-      <div className="mt-10 text-center">
-        <a href="#" className="inline-flex flex-col items-center gap-1 text-sm">
+      <Reveal className="mt-10 text-center" delay={80}>
+        <a
+          href={`mailto:${SITE.email}?subject=${encodeURIComponent(
+            "Pin something on the wall"
+          )}`}
+          className="inline-flex flex-col items-center gap-1 text-sm"
+        >
           <span className="font-semibold">wanna leave your mark?</span>
           <span className="text-[var(--awrs-primary)]">pin something on the visitor wall</span>
         </a>
-      </div>
+      </Reveal>
     </section>
   );
 }

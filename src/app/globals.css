@@ -230,7 +230,437 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* ---- Scroll reveal ----
+   The hidden state lives here rather than in Tailwind classes so that one
+   <noscript> rule (see the root layout) can reveal everything when JavaScript
+   is unavailable, and so that reduced-motion visitors never see a transition.
+
+   `translate` is used instead of `transform` on purpose: several revealed
+   elements already carry rotate/scale utilities, and this keeps the two from
+   overwriting each other. */
+[data-reveal] {
+  opacity: 0;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    translate 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, translate;
+}
+[data-reveal="up"] {
+  translate: 0 18px;
+}
+[data-reveal][data-visible="true"] {
+  opacity: 1;
+  translate: 0 0;
+  will-change: auto;
+}
+
+/* Scroll progress bar: scaled on the X axis from a scroll listener. */
+.awrs-scroll-progress {
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    translate: 0 0;
+    transition: none;
+  }
+  /* The decorative loops (floating particles, orbiting rings, marquees, the
+     spinning globe) are motion for its own sake — stop them too. */
+  .awrs-particle,
+  .awrs-avatar-ring,
+  .awrs-available-border-ring,
+  .awrs-available-bg-gradient,
+  .awrs-clock-halo,
+  .awrs-lume-dot,
+  .awrs-impact-float,
+  .awrs-stat-border,
+  .awrs-impact-glow,
+  .awrs-orbit-spin,
+  .awrs-orbit-spin-reverse,
+  .awrs-timeline-dot,
+  .awrs-marker-ring,
+  .awrs-cta-aurora,
+  .awrs-cta-aurora-alt,
+  .awrs-image-shimmer,
+  .awrs-rotate-border-ring,
+  .awrs-nav-glow-beam,
+  .awrs-nav-glow-core {
+    animation: none !important;
+  }
+}
+
+/* Text pages (privacy, terms, 404 body copy). Scoped so it never touches the
+   cloned marketing sections. */
+.awrs-prose h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--awrs-text);
+}
+.awrs-prose p,
+.awrs-prose li:not([class]) {
+  color: var(--awrs-text-secondary);
+  line-height: 1.75;
+}
+.awrs-prose p + p {
+  margin-top: 1rem;
+}
+.awrs-prose ul:not([class]) {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.75rem;
+}
+.awrs-prose li:not([class]) + li:not([class]) {
+  margin-top: 0.5rem;
+}
+.awrs-prose a:not([class]) {
+  color: var(--awrs-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .awrs-dot-grid {
   background-image: radial-gradient(circle, #ccc 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+/* ---- Animation-fidelity pass ----
+   See docs/research/awrs-me-f38a6f68/en-7a4ba3ba/ANIMATION_AUDIT.md for the
+   live-site extraction these are derived from. Angle custom properties are
+   registered via @property so the conic-gradient rings interpolate smoothly
+   instead of snapping between keyframes. */
+@property --awrs-gradient-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --awrs-available-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --awrs-stat-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --awrs-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes awrs-float-slow {
+  0%,
+  100% {
+    transform: translate(0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 15px) scale(0.95);
+  }
+}
+.awrs-particle {
+  animation: awrs-float-slow 8s ease-in-out infinite;
+}
+
+@keyframes awrs-gradient-rotate {
+  100% {
+    --awrs-gradient-angle: 360deg;
+  }
+}
+.awrs-avatar-ring {
+  animation: awrs-gradient-rotate 4s linear infinite;
+  background: conic-gradient(
+    from var(--awrs-gradient-angle),
+    var(--awrs-primary-dark),
+    var(--awrs-primary),
+    var(--awrs-primary-light),
+    var(--awrs-primary-dark)
+  );
+}
+
+@keyframes awrs-available-gradient-rotate {
+  100% {
+    --awrs-available-angle: 360deg;
+  }
+}
+.awrs-available-border-ring {
+  animation: awrs-available-gradient-rotate 3s linear infinite;
+  background: conic-gradient(
+    from var(--awrs-available-angle),
+    transparent,
+    rgba(16, 185, 129, 0.5),
+    transparent
+  );
+}
+
+@keyframes awrs-available-bg-shift {
+  0%,
+  100% {
+    opacity: 0.03;
+    background-position: 0% center;
+  }
+  50% {
+    opacity: 0.06;
+    background-position: 100% center;
+  }
+}
+.awrs-available-bg-gradient {
+  background-image: linear-gradient(90deg, transparent, #10b981, transparent);
+  background-size: 200% 100%;
+  animation: awrs-available-bg-shift 4s ease-in-out infinite;
+}
+
+@keyframes awrs-clock-halo-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.05);
+  }
+}
+.awrs-clock-halo {
+  animation: awrs-clock-halo-pulse 5s ease-in-out infinite;
+}
+
+@keyframes awrs-lume-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.awrs-lume-dot {
+  animation: awrs-lume-pulse 4s ease-in-out infinite;
+}
+
+@keyframes awrs-impact-float {
+  0%,
+  100% {
+    translate: 0px;
+  }
+  50% {
+    translate: 0px -6px;
+  }
+}
+.awrs-impact-float {
+  animation: awrs-impact-float 5s ease-in-out infinite;
+}
+
+@keyframes awrs-stat-border-rotate {
+  100% {
+    --awrs-stat-border-angle: 360deg;
+  }
+}
+.awrs-stat-border {
+  animation: awrs-stat-border-rotate 3.5s linear infinite;
+}
+
+@keyframes awrs-impact-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+.awrs-impact-glow {
+  animation: awrs-impact-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes awrs-orbit-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes awrs-orbit-spin-reverse {
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+.awrs-orbit-spin {
+  animation-name: awrs-orbit-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.awrs-orbit-spin-reverse {
+  animation-name: awrs-orbit-spin-reverse;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes awrs-timeline-pulse {
+  0%,
+  100% {
+    box-shadow:
+      rgba(224, 122, 156, 0.7) 0 0 8px 3px,
+      rgba(224, 122, 156, 0.4) 0 0 24px 10px,
+      rgba(224, 122, 156, 0.2) 0 0 80px 24px;
+  }
+  50% {
+    box-shadow:
+      rgba(224, 122, 156, 0.5) 0 0 5px 2px,
+      rgba(224, 122, 156, 0.2) 0 0 12px 5px;
+  }
+}
+.awrs-timeline-dot {
+  animation: awrs-timeline-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes awrs-marker-ring-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+.awrs-marker-ring {
+  animation: awrs-marker-ring-pulse 2.5s ease-out infinite;
+}
+
+@keyframes awrs-border-rotate {
+  100% {
+    --awrs-border-angle: 360deg;
+  }
+}
+.awrs-rotate-border-ring {
+  animation: awrs-border-rotate 3s linear infinite;
+  background: conic-gradient(
+    from var(--awrs-border-angle),
+    transparent,
+    var(--awrs-primary),
+    transparent
+  );
+}
+.awrs-achievement-border-sweep {
+  animation: awrs-border-rotate 3.5s linear infinite;
+}
+
+@keyframes awrs-title-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+.awrs-shimmer-title {
+  background-image: linear-gradient(
+    90deg,
+    currentColor 40%,
+    rgba(255, 255, 255, 0.9) 50%,
+    currentColor 60%
+  );
+  background-size: 220% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: awrs-title-shimmer 4s linear infinite;
+}
+
+@keyframes awrs-particle-float {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate(0px) scale(1);
+  }
+  33% {
+    opacity: 0.9;
+    transform: translate(6px, -10px) scale(1.15);
+  }
+  66% {
+    opacity: 0.35;
+    transform: translate(-5px, 7px) scale(0.85);
+  }
+}
+.awrs-achievement-particle {
+  animation-name: awrs-particle-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes awrs-sheen {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.awrs-image-shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: awrs-sheen 1.5s ease-in-out infinite;
+}
+
+@keyframes awrs-cta-aurora-drift {
+  0%,
+  100% {
+    transform: translate(0) scale(1);
+  }
+  33% {
+    transform: translate(10%, -5%) scale(1.1);
+  }
+  66% {
+    transform: translate(-5%, 8%) scale(0.95);
+  }
+}
+@keyframes awrs-cta-aurora-drift-alt {
+  0%,
+  100% {
+    transform: translate(0) scale(1);
+  }
+  33% {
+    transform: translate(-8%, 6%) scale(1.05);
+  }
+  66% {
+    transform: translate(6%, -4%) scale(0.9);
+  }
+}
+.awrs-cta-aurora {
+  animation: awrs-cta-aurora-drift 14s ease-in-out infinite;
+}
+.awrs-cta-aurora-alt {
+  animation: awrs-cta-aurora-drift-alt 18s ease-in-out infinite;
+}
+
+@keyframes awrs-cta-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+.awrs-cta-shimmer-layer {
+  background: linear-gradient(
+    110deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: awrs-cta-shimmer 2s ease-in-out infinite;
 }
