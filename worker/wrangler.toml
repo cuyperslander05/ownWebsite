@@ -1,0 +1,15 @@
+name = "landercodes-chat"
+main = "src/index.ts"
+compatibility_date = "2026-01-01"
+
+# Origins allowed to call this Worker. Everything else gets a 403, so the
+# endpoint cannot be dropped into someone else's page and run up the bill.
+[vars]
+ALLOWED_ORIGINS = "https://landercodes.dev,https://www.landercodes.dev,http://localhost:3000"
+
+# Per-IP rate limiting. Create it once with:
+#   npx wrangler kv namespace create CHAT_RATE_LIMIT
+# then paste the printed id below.
+[[kv_namespaces]]
+binding = "CHAT_RATE_LIMIT"
+id = "2cef6294a15249939e65d578aa96f5db"

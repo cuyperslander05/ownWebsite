@@ -42,7 +42,12 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
 
+      # The chat widget only renders when this is set. The URL is public by
+      # design — it ends up in the JavaScript bundle. The API key it needs
+      # never leaves Cloudflare; see worker/README.md.
       - run: npm run build
+        env:
+          NEXT_PUBLIC_CHAT_API_URL: https://landercodes-chat.landercuypersdev.workers.dev
 
       # Without this, GitHub Pages runs the output through Jekyll, which skips
       # every directory starting with an underscore — including _next, i.e. all

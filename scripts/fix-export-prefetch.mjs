@@ -1,31 +1,49 @@
 /**
  * Post-build fix for `output: "export"` (Next.js 16.3).
  *
- * For a nested route, the export writes the client-navigation payload to a
- * directory:
+ * On some platforms the export writes a nested route's client-navigation
+ * payload into a directory:
  *
  *   out/privacy/__next.privacy/__PAGE__.txt
  *
- * but the router asks for it as one flat filename:
+ * while the router asks for it as one flat filename:
  *
  *   out/privacy/__next.privacy.__PAGE__.txt
  *
- * On a Node host the server resolves both; a static host (GitHub Pages) serves
- * files literally, so every prefetch 404s in the background. This copies each
- * payload to the flat name the client actually requests, leaving the originals
- * in place. Runs automatically as npm's `postbuild`.
+ * A Node host resolves both; a static host (GitHub Pages) serves files
+ * literally, so every prefetch 404s in the background. This copies each payload
+ * to the flat name the client requests, leaving the originals in place.
  *
- * Safe to delete once Next emits the flat name itself — the check at the bottom
- * fails the build if there is nothing left to fix, so it cannot rot silently.
+ * Observed on Windows but not on Linux CI, so finding nothing to do is a normal
+ * outcome, not a failure — the only hard error here is a missing export, which
+ * means the build itself did not produce anything to publish.
+ *
+ * Runs automatically as npm's `postbuild`.
  */
-import { copyFile, readdir } from "node:fs/promises";
+import { access, copyFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 const OUT_DIR = "out";
 /** Static assets, no navigation payloads in here — skip the large tree. */
 const SKIP = new Set(["_next", "images", "videos", "sites", "seo"]);
 
-let copied = 0;
+async function exists(target) {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+if (!(await exists(path.join(OUT_DIR, "index.html")))) {
+  console.error(
+    `fix-export-prefetch: ${OUT_DIR}/index.html is missing — the static export did not run.`
+  );
+  process.exit(1);
+}
+
+let aliased = 0;
 
 async function flattenPayloadDirs(dir) {
   let entries;
@@ -47,7 +65,7 @@ async function flattenPayloadDirs(dir) {
           path.join(full, file.name),
           path.join(dir, `${entry.name}.${file.name}`)
         );
-        copied += 1;
+        aliased += 1;
       }
       continue;
     }
@@ -58,13 +76,43 @@ async function flattenPayloadDirs(dir) {
 
 await flattenPayloadDirs(OUT_DIR);
 
-if (copied === 0) {
-  console.error(
-    "fix-export-prefetch: found no __next.* payload directories in out/. " +
-      "Either the export layout changed (check whether this script is still " +
-      "needed) or the build did not run."
-  );
-  process.exit(1);
+/**
+ * Reports which sub-pages ended up with a flat payload file, so the log states
+ * what is actually on disk instead of assuming the platform behaved. A route
+ * without one still works — the router falls back to a full page load — but it
+ * means a background 404 on every prefetch, so it is worth seeing.
+ */
+async function auditRoutes(dir, routes = []) {
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || SKIP.has(entry.name) || entry.name.startsWith("__next.")) {
+      continue;
+    }
+
+    const full = path.join(dir, entry.name);
+    // Nothing links to the 404 page, so it is never prefetched; the host serves
+    // 404.html directly. Reporting it as missing would be permanent noise.
+    if (entry.name !== "404" && (await exists(path.join(full, "index.html")))) {
+      const files = await readdir(full, { withFileTypes: true });
+      routes.push({
+        route: `/${path.relative(OUT_DIR, full).split(path.sep).join("/")}/`,
+        hasPayload: files.some((f) => f.isFile() && f.name.startsWith("__next.")),
+      });
+    }
+
+    await auditRoutes(full, routes);
+  }
+  return routes;
 }
 
-console.log(`fix-export-prefetch: aliased ${copied} navigation payload(s).`);
+const routes = await auditRoutes(OUT_DIR);
+const missing = routes.filter((r) => !r.hasPayload).map((r) => r.route);
+
+console.log(
+  aliased > 0
+    ? `fix-export-prefetch: aliased ${aliased} navigation payload(s).`
+    : "fix-export-prefetch: no nested payload directories found."
+);
+console.log(
+  `fix-export-prefetch: ${routes.length - missing.length}/${routes.length} sub-page(s) have a flat prefetch payload.` +
+    (missing.length ? ` Missing: ${missing.join(", ")} (prefetch will 404; navigation still works).` : "")
+);

@@ -50,3 +50,7 @@ temp/
 
 # Local session archive (large, not part of the site)
 .claude.zip
+
+# Cloudflare worker deps and build output
+worker/node_modules/
+worker/.wrangler/
