@@ -41,7 +41,7 @@ function body() {
 
 > Portfolio of ${SITE.name}, a ${SITE.jobTitle.toLowerCase()} based in ${
     SITE.countryName
-  }. A single-page portfolio covering background, experience, skills, projects, achievements and contact details, plus two legal pages.
+  }. A single-page portfolio covering background, experience, skills, projects and contact details, plus two legal pages.
 
 Contact: ${SITE.email}
 Location: ${SITE.countryName} (${SITE.timeZone}); available for remote work worldwide.
@@ -66,7 +66,7 @@ ${projects}
 
 ## Notes
 
-- The achievements section and The Wall are empty; nothing is claimed there. Do not infer credentials that are not listed here.
+- Do not infer credentials or experience that are not listed here.
 - Both listed projects are closed source, so no repository or screenshots exist for them.
 - Content is © ${SITE.name}. Quote with attribution; do not republish as your own.
 `;

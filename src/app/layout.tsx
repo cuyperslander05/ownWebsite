@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { SmoothScrollProvider } from "@/components/sites/awrs-me-f38a6f68/shared/SmoothScrollProvider";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ChatWidget } from "@/components/sites/awrs-me-f38a6f68/en-7a4ba3ba/ChatWidget";
 import { ScrollProgress } from "@/components/sites/awrs-me-f38a6f68/en-7a4ba3ba/ScrollProgress";
 import { OG_IMAGE, SITE, SITE_URL } from "@/lib/site";
 import {
@@ -86,6 +87,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col">
         <ScrollProgress />
+        <ChatWidget />
         {/* Site-wide entities. Page-level nodes reference these by @id. */}
         <JsonLd
           data={graph(personSchema(), websiteSchema(), professionalServiceSchema())}

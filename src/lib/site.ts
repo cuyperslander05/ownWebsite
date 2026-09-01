@@ -102,8 +102,6 @@ export const SECTIONS = [
   { id: "experience", label: "Experience", summary: "Roles and what was shipped in each." },
   { id: "skills", label: "Skills", summary: "Languages, frameworks and tooling." },
   { id: "projects", label: "Projects", summary: "Selected work." },
-  { id: "achievements", label: "Achievements", summary: "Awards, certifications and milestones." },
   { id: "github", label: "Code & Contributions", summary: "Open-source activity." },
-  { id: "misc", label: "The Wall", summary: "Personal picks outside of work." },
   { id: "contact", label: "Contact", summary: "How to get in touch." },
 ] as const;

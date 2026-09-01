@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Decorative dark "wristwatch face" illustration for the About section.
@@ -9,12 +9,28 @@ import { useEffect, useState } from "react";
  *
  * Structure matches the live site's SVG closely: a 360x360 layered metal
  * bezel, a 60-tick chapter ring with 12 glowing dots + 8 diamond markers at
- * the non-cardinal major positions, a moon-phase disc on the left, a
- * weekday+day-of-month readout box on the right, the city name below
+ * the non-cardinal major positions, a weekday+day-of-month readout box on
+ * the right, the city name below
  * center, and hour/minute/second hands driven by the visitor's local time.
- * The readout ticks once per second, aligned to the wall-clock second so the
- * second hand lands on the ticks of the chapter ring.
+ *
+ * The hands sweep continuously rather than stepping once per second: angles are
+ * computed with millisecond precision and written straight to the elements'
+ * transform inside a rAF loop. They deliberately stay out of React state — at
+ * 60fps that would re-render the whole dial every frame, and nothing else on
+ * the page depends on the angles. Only the date readout, which changes once a
+ * minute at most, lives in state.
  */
+
+/**
+ * Dial furniture is luminous paint on a near-black dial, so it has to read
+ * light. The original clone painted the markers and hands in #1a1a1a — dark
+ * ink on a dark face, which made the time unreadable.
+ */
+const LUME = "#e9ede7";
+const LUME_DIM = "rgba(233,237,231,0.30)";
+const HAND = "#eceff1";
+/** The seconds hand picks up the site accent, the way a watch has one colour. */
+const SECOND_HAND = "var(--awrs-primary)";
 
 const CENTER = 180;
 const TICKS = Array.from({ length: 60 });
@@ -25,9 +41,6 @@ interface ClockReadout {
   day: number;
   weekday: string;
   city: string;
-  hourAngle: number;
-  minuteAngle: number;
-  secondAngle: number;
 }
 
 function Tick({ index }: { index: number }) {
@@ -39,8 +52,8 @@ function Tick({ index }: { index: number }) {
       y1={isMajor ? 30 : 23}
       x2={CENTER}
       y2={15}
-      stroke={isMajor ? "rgba(26,26,26,0.55)" : "#bbbbbb"}
-      strokeWidth={isMajor ? 2.2 : 0.6}
+      stroke={isMajor ? LUME : LUME_DIM}
+      strokeWidth={isMajor ? 2.4 : 0.7}
       strokeLinecap="round"
     />
   );
@@ -54,7 +67,7 @@ function LumeDot({ angle }: { angle: number }) {
       cx={CENTER}
       cy={CENTER - 162}
       r={3.2}
-      fill="#1a1a1a"
+      fill={LUME}
       filter="url(#awrs-clock-lume-glow)"
     />
   );
@@ -66,23 +79,35 @@ function DiamondMarker({ angle }: { angle: number }) {
     <polygon
       transform={`rotate(${angle} ${CENTER} ${CENTER})`}
       points={`${CENTER},${cy - 6} ${CENTER + 5},${cy} ${CENTER},${cy + 6} ${CENTER - 5},${cy}`}
-      fill="#1a1a1a"
+      fill={LUME}
       filter="url(#awrs-clock-lume-glow)"
     />
   );
 }
 
-function Hand({ angle, length, baseWidth }: { angle: number; length: number; baseWidth: number }) {
+function Hand({
+  angle,
+  length,
+  baseWidth,
+  ref,
+}: {
+  /** Where the hand is drawn before the sweep takes over on mount. */
+  angle: number;
+  length: number;
+  baseWidth: number;
+  ref: React.Ref<SVGPolygonElement>;
+}) {
   const tipY = CENTER - length;
   const baseY = CENTER - 6;
   const tailY = CENTER + 12;
   return (
     <polygon
+      ref={ref}
       transform={`rotate(${angle} ${CENTER} ${CENTER})`}
       points={`${CENTER},${tipY} ${CENTER + baseWidth},${baseY} ${CENTER},${tailY} ${CENTER - baseWidth},${baseY}`}
-      fill="rgba(20,20,20,0.9)"
-      stroke="rgba(20,20,20,0.1)"
-      strokeWidth={0.6}
+      fill={HAND}
+      stroke="rgba(0,0,0,0.45)"
+      strokeWidth={0.5}
       filter="url(#awrs-clock-hand-glow)"
     />
   );
@@ -90,47 +115,106 @@ function Hand({ angle, length, baseWidth }: { angle: number; length: number; bas
 
 export function OrbitalClock() {
   const [readout, setReadout] = useState<ClockReadout | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const hourRef = useRef<SVGPolygonElement>(null);
+  const minuteRef = useRef<SVGPolygonElement>(null);
+  const secondRef = useRef<SVGGElement>(null);
 
+  // The date readout. Date/Intl output is inherently client-only (server and
+  // client clocks and locales differ), so it is filled in after mount to avoid
+  // an SSR mismatch. A minute is plenty: none of these change faster.
   useEffect(() => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const rawCity = timeZone.split("/").pop() ?? timeZone;
     const city = rawCity.replace(/_/g, " ").toUpperCase();
 
-    const tick = () => {
+    const refresh = () => {
       const now = new Date();
-      const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short" })
-        .format(now)
-        .toUpperCase();
-
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-
-      // Date/Intl output is inherently client-only (server/client clocks and
-      // locales can differ); computing it after mount avoids an SSR mismatch.
       setReadout({
         day: now.getDate(),
-        weekday,
+        weekday: new Intl.DateTimeFormat("en-US", { weekday: "short" })
+          .format(now)
+          .toUpperCase(),
         city,
-        hourAngle: (hours % 12) * 30 + minutes * 0.5,
-        minuteAngle: minutes * 6 + seconds * 0.1,
-        secondAngle: seconds * 6,
       });
     };
 
-    tick();
+    refresh();
+    const id = window.setInterval(refresh, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
-    // Line the interval up with the next whole second so the hand steps on the
-    // beat instead of drifting a few hundred milliseconds off it.
-    let intervalId = 0;
-    const timeoutId = window.setTimeout(() => {
-      tick();
-      intervalId = window.setInterval(tick, 1000);
-    }, 1000 - new Date().getMilliseconds());
+  // The sweeping hands.
+  useEffect(() => {
+    const rotate = (el: SVGElement | null, angle: number) =>
+      el?.setAttribute("transform", `rotate(${angle.toFixed(3)} ${CENTER} ${CENTER})`);
+
+    const apply = () => {
+      const now = new Date();
+      // Fractional units all the way down, so every hand glides instead of
+      // stepping — including the hour hand creeping between the markers.
+      const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = (now.getHours() % 12) + minutes / 60;
+
+      rotate(hourRef.current, hours * 30);
+      rotate(minuteRef.current, minutes * 6);
+      rotate(secondRef.current, seconds * 6);
+    };
+
+    // A continuously gliding hand is exactly the kind of perpetual motion
+    // prefers-reduced-motion asks us to drop, but a frozen clock would be
+    // wrong rather than calm — so it steps once a second instead.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let frame = 0;
+    let interval = 0;
+
+    const start = () => {
+      if (frame || interval) return;
+      if (reduced) {
+        interval = window.setInterval(apply, 1000);
+        return;
+      }
+      const loop = () => {
+        apply();
+        frame = window.requestAnimationFrame(loop);
+      };
+      frame = window.requestAnimationFrame(loop);
+    };
+
+    const stop = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      if (interval) window.clearInterval(interval);
+      frame = 0;
+      interval = 0;
+    };
+
+    // Show the right time immediately, then only keep animating while the dial
+    // is actually on screen.
+    apply();
+
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Catch up after being paused before resuming the loop.
+          apply();
+          start();
+        } else {
+          stop();
+        }
+      },
+      { rootMargin: "100px" }
+    );
+
+    observer.observe(svg);
 
     return () => {
-      window.clearTimeout(timeoutId);
-      window.clearInterval(intervalId);
+      observer.disconnect();
+      stop();
     };
   }, []);
 
@@ -138,13 +222,10 @@ export function OrbitalClock() {
   const day = readout?.day ?? 0;
   const weekday = readout?.weekday ?? "";
   const city = readout?.city ?? "";
-  const hourAngle = readout?.hourAngle ?? 315;
-  const minuteAngle = readout?.minuteAngle ?? 30;
-  const secondAngle = readout?.secondAngle ?? 247;
 
   return (
-    <div className="relative -my-8 md:-my-16 flex justify-center">
-      <div className="relative w-[220px] h-[220px] md:w-[340px] md:h-[340px]">
+    <div className="relative w-[220px] h-[220px] shrink-0 md:w-[340px] md:h-[340px]">
+      <div className="relative h-full w-full">
         <div
           className="awrs-clock-halo pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[220px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full md:h-[400px] md:w-[360px]"
           style={{
@@ -154,7 +235,13 @@ export function OrbitalClock() {
           aria-hidden="true"
         />
 
-        <svg viewBox="0 0 360 360" className="h-full w-full" role="img" aria-label="Decorative watch face">
+        <svg
+          ref={svgRef}
+          viewBox="0 0 360 360"
+          className="h-full w-full"
+          role="img"
+          aria-label="Decorative watch face"
+        >
           <defs>
             <filter id="awrs-clock-lume-glow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="b" />
@@ -189,9 +276,6 @@ export function OrbitalClock() {
               <stop offset="75%" stopColor="#0a0a0a" />
               <stop offset="100%" stopColor="#050505" />
             </radialGradient>
-            <clipPath id="awrs-clock-moon-clip">
-              <circle cx="120.24" cy="180" r="27.88" />
-            </clipPath>
           </defs>
 
           {/* bezel stack */}
@@ -215,8 +299,8 @@ export function OrbitalClock() {
 
           {/* 12 o'clock double-tick accent */}
           <g filter="url(#awrs-clock-lume-glow)">
-            <line x1="172.2" y1="31.2" x2="173" y2="46.18" stroke="#1a1a1a" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="187.8" y1="31.2" x2="187" y2="46.18" stroke="#1a1a1a" strokeWidth="3.5" strokeLinecap="round" />
+            <line x1="172.2" y1="31.2" x2="173" y2="46.18" stroke={LUME} strokeWidth="3.5" strokeLinecap="round" />
+            <line x1="187.8" y1="31.2" x2="187" y2="46.18" stroke={LUME} strokeWidth="3.5" strokeLinecap="round" />
           </g>
 
           {/* dots at all 12 major positions, diamonds at the 8 non-cardinal ones */}
@@ -235,7 +319,7 @@ export function OrbitalClock() {
             dominantBaseline="central"
             fontSize="7"
             fontWeight="500"
-            fill="rgba(26,26,26,0.45)"
+            fill="rgba(233,237,231,0.5)"
             letterSpacing="2"
           >
             {mounted ? city : ""}
@@ -248,7 +332,7 @@ export function OrbitalClock() {
             textAnchor="middle"
             dominantBaseline="central"
             fontSize="5.5"
-            fill="rgba(26,26,26,0.35)"
+            fill="rgba(233,237,231,0.45)"
             letterSpacing="1.2"
           >
             {mounted ? weekday : ""}
@@ -267,36 +351,16 @@ export function OrbitalClock() {
             {mounted ? day : ""}
           </text>
 
-          {/* moon-phase disc, left side */}
-          <circle cx="120.24" cy="180" r="31.38" fill="none" stroke="#c8c8c8" strokeWidth="0.3" opacity="0.3" />
-          <circle cx="120.24" cy="180" r="29.88" fill="#f0f0f0" stroke="#c8c8c8" strokeWidth="0.7" />
-          <text
-            x="120.24"
-            y="145.12"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize="4.5"
-            fill="rgba(26,26,26,0.35)"
-            letterSpacing="1.2"
-          >
-            MOON
-          </text>
-          <g clipPath="url(#awrs-clock-moon-clip)">
-            <circle cx="120.24" cy="180" r="27.88" fill="rgba(26,26,26,0.06)" />
-            <path
-              d="M 120.24 152.12 A 27.88 27.88 0 0 1 120.24 207.88 A 5.48 27.88 0 0 1 120.24 152.12 Z"
-              fill="rgba(26,26,26,0.5)"
-            />
-          </g>
-
           {/* hour / minute hands */}
-          <Hand angle={hourAngle} length={80} baseWidth={2.4} />
-          <Hand angle={minuteAngle} length={116} baseWidth={1.8} />
+          {/* The angles here are only the pose the dial is drawn in for the
+              server render; the sweep overwrites them on mount. */}
+          <Hand ref={hourRef} angle={315} length={82} baseWidth={4.6} />
+          <Hand ref={minuteRef} angle={30} length={120} baseWidth={3.4} />
 
           {/* second hand */}
-          <g transform={`rotate(${secondAngle} ${CENTER} ${CENTER})`}>
-            <line x1={CENTER} y1={CENTER + 36.52} x2={CENTER} y2={CENTER - 141.1} stroke="#333333" strokeWidth="1.1" strokeLinecap="round" />
-            <circle cx={CENTER} cy={CENTER + 36.52} r="3.5" fill="#333333" />
+          <g ref={secondRef} transform={`rotate(247 ${CENTER} ${CENTER})`}>
+            <line x1={CENTER} y1={CENTER + 36.52} x2={CENTER} y2={CENTER - 141.1} stroke={SECOND_HAND} strokeWidth="1.3" strokeLinecap="round" />
+            <circle cx={CENTER} cy={CENTER + 36.52} r="3.5" fill={SECOND_HAND} />
           </g>
 
           {/* center pivot */}

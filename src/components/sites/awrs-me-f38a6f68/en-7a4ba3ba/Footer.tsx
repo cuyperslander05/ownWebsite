@@ -37,11 +37,6 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/#misc" className="hover:text-[var(--awrs-text)]">
-                The Wall
-              </Link>
-            </li>
-            <li>
               <Link href="/#contact" className="hover:text-[var(--awrs-text)]">
                 Contact
               </Link>

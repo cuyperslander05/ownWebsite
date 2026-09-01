@@ -7,6 +7,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { SITE } from "@/lib/site";
 import { DotGlobe } from "./DotGlobe";
 import { Reveal } from "./Reveal";
+import { LanguageColumn, LanguageRow } from "./Languages";
 import { OrbitalClock } from "./OrbitalClock";
 
 interface Stat {
@@ -184,10 +185,25 @@ export function AboutSection() {
           </div>
         </div>
 
-        <OrbitalClock />
+        {/* The dial keeps its negative margins here so it still pokes into the
+            rows above and below — the notch on the card below is measured
+            against exactly this overlap. */}
+        <div className="relative -mt-8 md:-my-16">
+          <div className="flex items-center justify-center gap-6 lg:gap-12">
+            <LanguageColumn side="left" />
+            <OrbitalClock />
+            <LanguageColumn side="right" />
+          </div>
+          {/* Only rendered below md, where it also provides the gap to the
+              card underneath — the dial's negative bottom margin stops there. */}
+          <div className="mt-6 mb-10">
+            <LanguageRow />
+          </div>
+        </div>
 
-        {/* Row 3: available-for-work CTA */}
-        <div className="relative flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-emerald-50/40 p-8 md:flex-row md:items-center md:p-10">
+        {/* Row 3: available-for-work CTA. The notch keeps it clear of the watch
+            face hanging into it from above — see .awrs-cta-notch. */}
+        <div className="awrs-cta-notch relative flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-emerald-50/40 p-8 md:flex-row md:items-center md:p-10">
           <div className="awrs-available-bg-gradient pointer-events-none absolute inset-0 rounded-2xl opacity-[0.06]" />
           <div className="awrs-available-border-ring pointer-events-none absolute inset-0 rounded-2xl p-px [mask:linear-gradient(#000,#000)_content-box_exclude,_linear-gradient(#000,#000)]" />
           <div className="relative">

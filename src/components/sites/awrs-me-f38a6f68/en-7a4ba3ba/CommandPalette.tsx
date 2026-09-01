@@ -7,7 +7,6 @@ import {
   Search,
   Home,
   Folder,
-  PenLine,
   MessageCircle,
   ArrowUpRight,
   Shield,
@@ -33,7 +32,6 @@ interface PageEntry {
 const PAGES: PageEntry[] = [
   { label: "Home", href: "/", icon: Home },
   { label: "Projects", href: "/#projects", icon: Folder },
-  { label: "The Wall", href: "/#misc", icon: PenLine },
   { label: "Contact", href: "/#contact", icon: MessageCircle },
 ];
 

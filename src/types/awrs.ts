@@ -56,30 +56,12 @@ export interface ProjectItem {
   cardBg: string;
 }
 
-export interface AchievementItem {
-  title: string;
-  org: string;
-  date: string;
-  description: string;
-  icon: string;
-  accentColor: string;
-}
-
 export interface GithubStats {
   username: string;
   totalContributions: number;
   followers: number;
   repositories: number;
   stars: number;
-}
-
-export interface StickerItem {
-  src: string;
-  alt: string;
-  top: string;
-  left: string;
-  rotate: number;
-  width: number;
 }
 
 export interface FooterLinkGroup {

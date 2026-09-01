@@ -230,6 +230,57 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* On md and up the available-for-work card sits directly under the watch face,
+   which hangs into it by its negative bottom margin. Rather than letting the
+   two overlap, the card's top edge curves around the dial: the mask punches a
+   circle out of it, centred on the dial and a little wider, so a ring of
+   background stays visible between the two.
+
+   The numbers follow the clock: radius = dial radius + 12px of breathing room,
+   and the centre sits (dial radius - overlap) above the card's top edge.
+
+   Below md there is no mask at all: the language row takes that space, the dial
+   no longer reaches the card, and a notch would cut a hole where nothing is. */
+@media (min-width: 768px) {
+  .awrs-cta-notch {
+    --awrs-notch-radius: 182px;
+    --awrs-notch-center: -106px;
+    -webkit-mask-image: radial-gradient(
+      circle var(--awrs-notch-radius) at 50% var(--awrs-notch-center),
+      transparent 99%,
+      #000 100%
+    );
+    mask-image: radial-gradient(
+      circle var(--awrs-notch-radius) at 50% var(--awrs-notch-center),
+      transparent 99%,
+      #000 100%
+    );
+  }
+}
+
+/* The assistant's "typing" indicator. */
+@keyframes awrs-typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+.awrs-typing-dot {
+  animation: awrs-typing 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .awrs-typing-dot {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
 /* ---- Scroll reveal ----
    The hidden state lives here rather than in Tailwind classes so that one
    <noscript> rule (see the root layout) can reveal everything when JavaScript
