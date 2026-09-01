@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { LucideIcon } from "lucide-react";
-import { GraduationCap, Quote } from "lucide-react";
+import { GraduationCap, Mail, Quote } from "lucide-react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { SITE } from "@/lib/site";
 import { DotGlobe } from "./DotGlobe";
 import { Reveal } from "./Reveal";
-import { LanguageColumn, LanguageRow } from "./Languages";
+import { Languages, Portrait } from "./Languages";
 import { OrbitalClock } from "./OrbitalClock";
 
 interface Stat {
@@ -76,6 +76,25 @@ function useCountUp(targets: number[], durationMs = 1200) {
 
   return { containerRef, counts };
 }
+
+/**
+ * The CV is sent on request rather than published. The file carries a home
+ * address, a phone number and a date of birth, and a public PDF is scraped and
+ * indexed within days — permanently, whether or not it is taken down later.
+ * Employers get it just as easily this way, and Lander decides who receives it.
+ */
+const CV_REQUEST_BODY = [
+  "Hi Lander,",
+  "",
+  "Could you send me your CV?",
+  "",
+  "I'm reaching out about:",
+  "",
+].join("\n");
+
+const CV_REQUEST = `mailto:${SITE.email}?subject=${encodeURIComponent(
+  "CV request"
+)}&body=${encodeURIComponent(CV_REQUEST_BODY)}`;
 
 const CARD_BASE =
   "awrs-spotlight-card rounded-2xl border border-[var(--awrs-border)] bg-[var(--awrs-card)] p-6 transition-all duration-[600ms] ease-out";
@@ -185,25 +204,26 @@ export function AboutSection() {
           </div>
         </div>
 
-        {/* The dial keeps its negative margins here so it still pokes into the
-            rows above and below — the notch on the card below is measured
-            against exactly this overlap. */}
-        <div className="relative -mt-8 md:-my-16">
-          <div className="flex items-center justify-center gap-6 lg:gap-12">
-            <LanguageColumn side="left" />
-            <OrbitalClock />
-            <LanguageColumn side="right" />
-          </div>
-          {/* Only rendered below md, where it also provides the gap to the
-              card underneath — the dial's negative bottom margin stops there. */}
-          <div className="mt-6 mb-10">
-            <LanguageRow />
+        {/* Row 2: the dial, with the languages and the portrait, held together
+            in one panel. The dial used to hang out of its row into the cards
+            above and below; inside a panel that would read as a mistake, so the
+            overlap — and the notch the card below carried for it — are gone. */}
+        <div className="mt-6 rounded-2xl border border-[var(--awrs-border)] bg-[var(--awrs-card)] p-6 md:mt-10 md:p-8">
+          <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between md:gap-6">
+            {/* Ordered so it reads dial / portrait / languages when stacked,
+                and languages / dial / portrait once there is room for a row. */}
+            <Languages className="order-3 w-full max-w-xs md:order-1 md:w-40 lg:w-48" />
+            {/* The dial needs an explicit order of its own: without one it
+                defaults to 0 and sorts ahead of both siblings. */}
+            <div className="order-1 md:order-2">
+              <OrbitalClock />
+            </div>
+            <Portrait className="order-2 md:order-3 md:w-40 lg:w-48" />
           </div>
         </div>
 
-        {/* Row 3: available-for-work CTA. The notch keeps it clear of the watch
-            face hanging into it from above — see .awrs-cta-notch. */}
-        <div className="awrs-cta-notch relative flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-emerald-50/40 p-8 dark:bg-emerald-950/25 md:flex-row md:items-center md:p-10">
+        {/* Row 3: available-for-work CTA */}
+        <div className="relative mt-6 flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-emerald-50/40 p-8 dark:bg-emerald-950/25 md:mt-10 md:flex-row md:items-center md:p-10">
           <div className="awrs-available-bg-gradient pointer-events-none absolute inset-0 rounded-2xl opacity-[0.06]" />
           <div className="awrs-available-border-ring pointer-events-none absolute inset-0 rounded-2xl p-px [mask:linear-gradient(#000,#000)_content-box_exclude,_linear-gradient(#000,#000)]" />
           <div className="relative">
@@ -225,6 +245,20 @@ export function AboutSection() {
                 together.
               </span>
             </h3>
+
+            {/* Not a <Link>: this is a file, not a route, so it should be a
+                plain anchor the browser hands straight to the download. */}
+            <a
+              href={CV_REQUEST}
+              className="group/cv mt-6 inline-flex items-center gap-2.5 rounded-full bg-[var(--awrs-text)] px-5 py-2.5 text-sm font-semibold text-[var(--awrs-bg)] transition-transform hover:scale-[1.03]"
+            >
+              <Mail
+                size={16}
+                className="transition-transform group-hover/cv:-translate-y-0.5"
+                aria-hidden="true"
+              />
+              Request my CV
+            </a>
           </div>
           <div className="relative text-right">
             <Quote className="ml-auto text-[var(--awrs-primary)]/30" />

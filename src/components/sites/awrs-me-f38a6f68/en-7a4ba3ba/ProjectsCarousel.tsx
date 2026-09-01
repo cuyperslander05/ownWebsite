@@ -245,7 +245,7 @@ export function ProjectsCarousel() {
   if (PROJECTS.length === 0) {
     return (
       <section id="projects" className="py-20 md:py-28">
-        <div className="max-w-5xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <Reveal>
             <h2 className="text-4xl md:text-5xl font-black">
               Featured <span style={{ color: "var(--awrs-primary)" }}>Projects</span>
@@ -273,7 +273,9 @@ export function ProjectsCarousel() {
     <div ref={trackWrapRef} className="w-max">
       <div
         ref={trackRef}
-        className="mt-10 flex gap-6 px-6 md:px-12 w-max will-change-transform"
+        className={`mt-10 flex gap-6 w-max will-change-transform${
+          isPinned ? " px-6 md:px-12" : ""
+        }`}
       >
         {PROJECTS.map((project, i) => (
           <ProjectCard
@@ -287,11 +289,19 @@ export function ProjectsCarousel() {
     </div>
   );
 
+  // Same container and accent bar as every other section heading, so it lines
+  // up with the rest of the page instead of hanging off the left edge. When the
+  // cards are pinned they run full-bleed, so only the heading is constrained.
+  //
+  // w-full matters: in the pinned branch this sits in a flex column, where the
+  // auto margins would otherwise stop it stretching and centre it on its own
+  // text width instead of aligning it with the cards.
   const heading = (
-    <Reveal className="px-6 md:px-12">
+    <Reveal className="w-full max-w-6xl mx-auto px-6">
       <h2 className="text-4xl md:text-5xl font-black">
         Featured <span style={{ color: "var(--awrs-primary)" }}>Projects</span>
       </h2>
+      <div className="w-10 h-1 bg-[var(--awrs-primary)] rounded-full mt-4" />
     </Reveal>
   );
 
@@ -302,7 +312,9 @@ export function ProjectsCarousel() {
     return (
       <section id="projects" className="py-20 md:py-28">
         {heading}
-        <div className="flex justify-center overflow-x-auto">{cards}</div>
+        {/* overflow-x-auto is a safety net: if the row is a little wider than
+            the container it scrolls sideways rather than breaking the page. */}
+        <div className="max-w-6xl mx-auto px-6 overflow-x-auto">{cards}</div>
       </section>
     );
   }
