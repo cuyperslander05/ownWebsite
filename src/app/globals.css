@@ -150,6 +150,31 @@
   --awrs-primary-dark: #a83d62;
   --awrs-primary-glow: #d4547e40;
   --awrs-beams-line: #888;
+
+  /* The globe is drawn on a canvas, which cannot read Tailwind classes, so
+     its two ink colours are tokens it can look up. */
+  --awrs-globe-land: 26, 26, 26;
+  --awrs-globe-ocean: 0, 0, 0;
+}
+
+/* Dark palette, matching the design this site was built from. The brand pink
+   is unchanged in both themes; only the surfaces, text and borders swap. */
+.dark {
+  --awrs-bg: #000;
+  --awrs-bg-secondary: #080808;
+  --awrs-bg-tertiary: #0f0f0f;
+  --awrs-text: #f0f0f0;
+  --awrs-text-secondary: #a1a1aa;
+  --awrs-text-tertiary: #71717a;
+  --awrs-border: #242424;
+  --awrs-card: #070707;
+  --awrs-card-hover: #191919;
+  --awrs-navbar: #0a0a0aeb;
+  --awrs-primary-glow: #d4547e4d;
+  --awrs-beams-line: #d4d4d4;
+
+  --awrs-globe-land: 233, 237, 231;
+  --awrs-globe-ocean: 255, 255, 255;
 }
 
 @keyframes awrs-marquee {
@@ -226,8 +251,10 @@
     var(--awrs-primary-light),
     #f5b8cc
   );
+  background-size: 300% 300%;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: awrs-hero-gradient-shift 6s ease-in-out infinite;
 }
 
 /* On md and up the available-for-work card sits directly under the watch face,
@@ -279,6 +306,84 @@
     animation: none;
     opacity: 0.5;
   }
+}
+
+/* The hero name's gradient drifts across the letters instead of sitting
+   still. Needs the oversized background-size to have somewhere to travel. */
+@keyframes awrs-hero-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center;
+  }
+}
+
+/* A conic highlight travelling around the greeting pill's border. */
+@property --awrs-greeting-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes awrs-greeting-glow-rotate {
+  100% {
+    --awrs-greeting-angle: 360deg;
+  }
+}
+.awrs-greeting-glow {
+  position: relative;
+}
+.awrs-greeting-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--awrs-greeting-angle),
+    transparent 30%,
+    var(--awrs-primary) 50%,
+    transparent 70%
+  );
+  mask:
+    linear-gradient(#fff, #fff) content-box exclude,
+    linear-gradient(#fff, #fff);
+  pointer-events: none;
+  animation: awrs-greeting-glow-rotate 3s linear infinite;
+}
+.awrs-greeting-glow::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.15;
+  filter: blur(8px);
+  background: conic-gradient(
+    from var(--awrs-greeting-angle),
+    transparent 35%,
+    var(--awrs-primary-light) 50%,
+    transparent 65%
+  );
+  pointer-events: none;
+  animation: awrs-greeting-glow-rotate 3s linear infinite;
+}
+
+/* A second, faster drift so the hero particles do not all move in lockstep. */
+@keyframes awrs-float-medium {
+  0%,
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+  50% {
+    translate: -40px 25px;
+    scale: 1.1;
+  }
+}
+.awrs-particle-alt {
+  animation: awrs-float-medium 6s ease-in-out infinite;
 }
 
 /* ---- Scroll reveal ----
@@ -337,7 +442,11 @@
   .awrs-image-shimmer,
   .awrs-rotate-border-ring,
   .awrs-nav-glow-beam,
-  .awrs-nav-glow-core {
+  .awrs-nav-glow-core,
+  .awrs-hero-char,
+  .awrs-particle-alt,
+  .awrs-greeting-glow::before,
+  .awrs-greeting-glow::after {
     animation: none !important;
   }
 }

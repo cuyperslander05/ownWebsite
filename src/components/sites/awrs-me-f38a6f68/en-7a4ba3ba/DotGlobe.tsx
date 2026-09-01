@@ -156,6 +156,17 @@ export function DotGlobe({ className }: { className?: string }) {
 
     const dots = buildDots();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    // A canvas cannot inherit colours, so the two inks are read from CSS
+    // tokens that change with the theme (see --awrs-globe-* in globals.css).
+    let landInk = "26,26,26";
+    let oceanInk = "0,0,0";
+
+    const readInks = () => {
+      const styles = getComputedStyle(document.documentElement);
+      landInk = styles.getPropertyValue("--awrs-globe-land").trim() || landInk;
+      oceanInk = styles.getPropertyValue("--awrs-globe-ocean").trim() || oceanInk;
+    };
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const start = performance.now();
     let size = 0;
@@ -184,8 +195,8 @@ export function DotGlobe({ className }: { className?: string }) {
         const depth = 0.25 + 0.75 * z;
         const s = (dot.land ? 1.8 : 1.3) * dpr * depth;
         ctx.fillStyle = dot.land
-          ? `rgba(26,26,26,${0.6 * depth})`
-          : `rgba(0,0,0,${0.17 * depth})`;
+          ? `rgba(${landInk},${0.6 * depth})`
+          : `rgba(${oceanInk},${0.17 * depth})`;
         ctx.fillRect(c + x * radius - s / 2, c - dot.y * radius - s / 2, s, s);
       }
     };
@@ -225,6 +236,18 @@ export function DotGlobe({ className }: { className?: string }) {
       draw(spinAt(performance.now()));
     };
 
+    // Redraw immediately when the theme is toggled: while the globe is paused
+    // off screen, or under reduced motion, no frame would otherwise repaint it.
+    const themeObserver = new MutationObserver(() => {
+      readInks();
+      draw(spinAt(performance.now()));
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    readInks();
     resize();
     draw(spinAt(performance.now()));
     observer.observe(canvas);
@@ -232,6 +255,7 @@ export function DotGlobe({ className }: { className?: string }) {
 
     return () => {
       observer.disconnect();
+      themeObserver.disconnect();
       window.removeEventListener("resize", onResize);
       stop();
     };

@@ -67,7 +67,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   colorScheme: "light",
 };
 
@@ -77,8 +80,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    // suppressHydrationWarning: the inline theme script below sets .dark on
+    // this element before React hydrates, so its class list intentionally
+    // differs from what the server rendered.
+    <html
+      lang="en"
+      className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <head>
+        {/* Applies the saved theme before the first paint. In a component this
+            would run after hydration, and the page would flash white on its way
+            to dark. Falls back to the visitor's system preference. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}`,
+          }}
+        />
         {/* Scroll reveals hide their content until JavaScript observes them.
             Without JS there is no observer, so the hidden state is lifted. */}
         <noscript>

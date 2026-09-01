@@ -92,7 +92,9 @@ export function Hero() {
         {PARTICLES.map((particle, index) => (
           <div
             key={index}
-            className="awrs-particle absolute h-1 w-1 rounded-full bg-[var(--awrs-primary)]/20"
+            className={`${
+              index % 2 === 0 ? "awrs-particle" : "awrs-particle-alt"
+            } absolute h-1 w-1 rounded-full bg-[var(--awrs-primary)]/20`}
             style={{ top: particle.top, left: particle.left, animationDelay: particle.delay }}
           />
         ))}

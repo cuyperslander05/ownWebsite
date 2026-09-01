@@ -148,7 +148,7 @@ export function Nav() {
         onClick={() => setPaletteOpen(true)}
         className={cn(
           floatingPillClasses,
-          "fixed top-4 inset-x-0 z-50 mx-auto flex h-12 w-fit items-center gap-2 px-6 text-sm font-medium text-[var(--awrs-text)] transition-transform active:scale-95 md:hidden"
+          "awrs-greeting-glow fixed top-4 inset-x-0 z-50 mx-auto flex h-12 w-fit items-center gap-2 px-6 text-sm font-medium text-[var(--awrs-text)] transition-transform active:scale-95 md:hidden"
         )}
       >
         <Menu size={16} />

@@ -203,7 +203,7 @@ export function AboutSection() {
 
         {/* Row 3: available-for-work CTA. The notch keeps it clear of the watch
             face hanging into it from above — see .awrs-cta-notch. */}
-        <div className="awrs-cta-notch relative flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-emerald-50/40 p-8 md:flex-row md:items-center md:p-10">
+        <div className="awrs-cta-notch relative flex flex-col items-start justify-between gap-8 overflow-hidden rounded-2xl border border-[var(--awrs-border)] bg-emerald-50/40 p-8 dark:bg-emerald-950/25 md:flex-row md:items-center md:p-10">
           <div className="awrs-available-bg-gradient pointer-events-none absolute inset-0 rounded-2xl opacity-[0.06]" />
           <div className="awrs-available-border-ring pointer-events-none absolute inset-0 rounded-2xl p-px [mask:linear-gradient(#000,#000)_content-box_exclude,_linear-gradient(#000,#000)]" />
           <div className="relative">
