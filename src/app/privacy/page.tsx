@@ -18,7 +18,7 @@ const CRUMBS: Crumb[] = [
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: "/privacy" },
+  alternates: { canonical: "/privacy/" },
   openGraph: pageOpenGraph({
     path: "/privacy",
     title: `${TITLE} | ${SITE.name}`,

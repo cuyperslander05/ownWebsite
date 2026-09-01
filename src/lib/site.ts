@@ -43,9 +43,23 @@ export const OG_IMAGE = {
   alt: "Lander Cuypers — Full-Stack Developer",
 } as const;
 
-/** Absolute URL for a site-relative path. Structured data must not use relative URLs. */
+/**
+ * Absolute URL for a site-relative path. Structured data must not use relative
+ * URLs.
+ *
+ * Page paths get a trailing slash to match `trailingSlash: true`, so canonical
+ * tags, the sitemap and the structured data all name the exact URL the host
+ * serves. Files keep their extension untouched (/sitemap.xml, not
+ * /sitemap.xml/), and a fragment stays attached to the end.
+ */
 export function absoluteUrl(path = "/") {
-  return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const withLeadingSlash = path.startsWith("/") ? path : `/${path}`;
+  const [pathname, fragment] = withLeadingSlash.split("#");
+  const isFile = /\.[a-z0-9]+$/i.test(pathname);
+  const normalized =
+    isFile || pathname.endsWith("/") ? pathname : `${pathname}/`;
+
+  return `${SITE_URL}${normalized}${fragment ? `#${fragment}` : ""}`;
 }
 
 /**

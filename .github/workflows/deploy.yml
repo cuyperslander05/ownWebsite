@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+# Builds the static export and publishes it to GitHub Pages.
+#
+# One-time setup in the repository: Settings -> Pages -> "Build and deployment"
+# -> Source: "GitHub Actions". The custom domain comes from public/CNAME, which
+# is copied into the export, so it survives every deploy.
+
+on:
+  push:
+    branches: [main]
+  # Lets you re-publish from the Actions tab without pushing a commit.
+  workflow_dispatch:
+
+# GITHUB_TOKEN needs to be allowed to publish the Pages artifact.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys overwrite each other; queue instead. In-progress runs
+# are allowed to finish so a half-published site never goes live.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Fail the deploy on a type error or a lint error rather than publishing
+      # a broken site.
+      - run: npm run lint
+      - run: npm run typecheck
+
+      - run: npm run build
+
+      # Without this, GitHub Pages runs the output through Jekyll, which skips
+      # every directory starting with an underscore — including _next, i.e. all
+      # the CSS and JavaScript.
+      - run: touch out/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

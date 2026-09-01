@@ -18,7 +18,7 @@ const CRUMBS: Crumb[] = [
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: "/terms" },
+  alternates: { canonical: "/terms/" },
   openGraph: pageOpenGraph({
     path: "/terms",
     title: `${TITLE} | ${SITE.name}`,
