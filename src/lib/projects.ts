@@ -31,6 +31,16 @@ export const IMG = "/sites/awrs-me-f38a6f68/en-7a4ba3ba/images/projects";
 
 export const PROJECTS: Project[] = [
   {
+    title: "Crate",
+    category: "WEB APP",
+    description:
+      "A real-time social listening app: shared jam rooms, voted queues, and a sound profile computed from Spotify's own audio features.",
+    logo: `${IMG}/crate/logo.svg`,
+    shots: [`${IMG}/crate/shot1.png`, `${IMG}/crate/shot2.png`, `${IMG}/crate/shot3.png`],
+    tags: ["React", "Socket.io", "PostgreSQL", "Spotify API"],
+    cardBg: "linear-gradient(135deg, #241c17, #c26e53)",
+  },
+  {
     title: "School Monitoring Tool",
     category: "INTERNAL TOOL",
     description:
